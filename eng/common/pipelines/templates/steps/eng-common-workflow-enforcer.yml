@@ -6,7 +6,11 @@ steps:
         Set-PsDebug -Trace 1
         # Find the default branch of the repo
         Write-Host "Default Branch: $(defaultBranch)"
-        if ((!"$(System.PullRequest.SourceBranch)".StartsWith("sync-eng/common")))
+        $targetBranch = "$(defaultBranch)"
+        if (!$targetBranch) {
+          $defaultBranch = (git remote show origin | Out-String) -replace "(?ms).*HEAD branch: (\w+).*", '$1'
+        }
+        if ((!"$(System.PullRequest.SourceBranch)".StartsWith("sync-eng/common")) -and $targetBranch -eq $defaultBranch)
         {
           $filesInCommonDir  = & "${{ parameters.ScriptDirectory }}" -IncludeRegex 'eng/common/*'
           if (($LASTEXITCODE -eq 0) -and ($filesInCommonDir.Count -gt 0))
